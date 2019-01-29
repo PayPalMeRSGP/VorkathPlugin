@@ -1,0 +1,49 @@
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+
+public abstract class ReactiveTask {
+
+    static Queue<ReactiveTask> taskQueue;
+
+    AtomicBoolean runShouldEnqueueTask;
+    AtomicBoolean runTask;
+
+
+
+    public static void setTaskQueue(Queue<ReactiveTask> taskQueue) {
+        ReactiveTask.taskQueue = taskQueue;
+    }
+
+    void startShouldEnqueueTaskThread() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runShouldEnqueueTask = new AtomicBoolean(true);
+                while(runShouldEnqueueTask.get()) {
+                    if(taskQueue.contains(this)) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        continue;
+                    }
+
+                    if(enqueueTask()) {
+                        taskQueue.add(ReactiveTask.this);
+                    }
+
+                }
+            }
+        }).start();
+    }
+
+    void stopShouldEnqueueTaskThread() {
+        if(runShouldEnqueueTask != null)
+            runShouldEnqueueTask.set(false);
+    }
+            
+    abstract void task();
+    abstract boolean enqueueTask();
+}
