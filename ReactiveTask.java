@@ -1,6 +1,5 @@
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 public abstract class ReactiveTask {
 
@@ -9,13 +8,11 @@ public abstract class ReactiveTask {
     AtomicBoolean runShouldEnqueueTask;
     AtomicBoolean runTask;
 
-
-
     public static void setTaskQueue(Queue<ReactiveTask> taskQueue) {
         ReactiveTask.taskQueue = taskQueue;
     }
 
-    void startShouldEnqueueTaskThread() {
+    void startCheckEnqueueTaskConditionThread() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -30,7 +27,7 @@ public abstract class ReactiveTask {
                         continue;
                     }
 
-                    if(enqueueTask()) {
+                    if(checkEnqueueTaskCondition()) {
                         taskQueue.add(ReactiveTask.this);
                     }
 
@@ -39,11 +36,26 @@ public abstract class ReactiveTask {
         }).start();
     }
 
-    void stopShouldEnqueueTaskThread() {
+    void stopCheckEnqueueTaskConditionThread() {
         if(runShouldEnqueueTask != null)
             runShouldEnqueueTask.set(false);
     }
-            
+
+    void runTask() {
+        runTask = new AtomicBoolean(true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                task();
+            }
+        }).start();
+    }
+
+    void stopTask() {
+        if(runTask != null)
+            runTask.set(false);
+    }
+
     abstract void task();
-    abstract boolean enqueueTask();
+    abstract boolean checkEnqueueTaskCondition();
 }
