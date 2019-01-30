@@ -1,0 +1,32 @@
+import java.util.PriorityQueue;
+
+public abstract class PrioritizedReactiveTask extends ReactiveTask implements Comparable<PrioritizedReactiveTask> {
+
+    enum Priority {
+        HIGH(1), LOW(0);
+
+        private final int value;
+
+        Priority(final int newValue) {
+            value = newValue;
+        }
+
+        public int getValue() { return value; }
+    }
+    Priority p;
+    static PriorityQueue<ReactiveTask> taskQueue;
+
+    public PrioritizedReactiveTask(Priority p){
+        this.p = p;
+    }
+
+    public static void setTaskQueue(PriorityQueue<ReactiveTask> taskQueue) {
+        ReactiveTask.taskQueue = taskQueue;
+    }
+
+    @Override
+    public int compareTo(PrioritizedReactiveTask other) {
+        return other.p.getValue() - this.p.getValue();
+
+    }
+}
